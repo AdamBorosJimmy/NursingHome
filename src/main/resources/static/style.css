@@ -1,0 +1,81 @@
+    /* A teljes oldal (body) háttere halványszürke lesz */
+        body {
+        display: flex;
+        flex-direction: column; /* Egymás alá rakja a fő elemeket */
+        justify-content: center; /* Vízszintes középpont */
+        align-items: center; /* Függőleges középpont */
+        min-height: 100vh; /* Kitölti a teljes képernyőmagasságot */
+        margin: 0;
+        background-color: #f4f4f4;
+        font-family: Arial, sans-serif; /* Szebb betűtípus*/
+        }
+
+        .urlap-kartya {
+        background-color: blue; /* Fehér háttér a kártyának */
+        padding: 30px; /* Kényelmes belső tér a mezők körül */
+        border-radius: 10px; /* Szép, modern lekerekített sarkok */
+        box-shadow: 0 4px 80px rgba(0,0,0,0.1); /* Finom árnyék, amitől lebeg a kártya */
+        width: 200px; /* Fix szélesség a kártyának*/
+        display: flex;
+        flex-direction: column; /* Elrendezés: oszlop (egymás alá) */
+        gap: 10px; /* Automatikus 10 pixel távolság minden elem között */
+        }
+
+        /* A főcímet középre igazítjuk és sötétszürkére színezzük */
+        #fejlec{
+        color: #1a365d;
+        text-align: center;
+        }
+
+        #jelszo-mezo::placeholder {
+        font-family: 'Courier New', monospace;
+        font-style: italic;
+        color: red;
+        }
+
+        /* Megformázzuk kifejezetten a Bejelenetkezés gombot az ID-ja alapján */
+        #belépés-gomb {
+        background-color: #2b6cb0; /* Kék háttér */
+        color: white;               /*Fehér betűk */
+        padding: 10px 20px;         /* belső távolság (vastagság) */
+        border: none;               /* Eltüntetjük a csúnya fekete keretet */
+        border-radius: 5px;         /* Lekerekítjük a sarkait */
+        cursor: pointer;            /* Mutatóujjá változik az egér felette */
+        transition: background-color 0.3s ease /* Finom, selymes színátmenet*/
+        }
+
+        input[type = "text"] { /* #nev-mezo - használhatok egyedi azonosítót a leírt mód alapján és akkor már
+                                nincs szükség a []-re és a benne lévő adatokra sem, mert az azonosítóval hiatkozok*/
+         width: 60%;                 /* Teljes szélességűek lesznek */
+    padding: 10px;               /* Belső hely, hogy kényelmesen lehessen gépelni */
+    margin: 8px 0;               /* Külső margó alul-felül, hogy ne tapadjanak egymáshoz */
+    display: inline-block;
+    border: 5px solid #ccc;      /* Finom, halványszürke keret */
+    border-radius: 4px;          /* Enyhe lekerekítés, mint a gombon */
+    box-sizing: border-box;      /* Biztosítja, hogy a padding ne tolja szét a méretet */
+        }
+
+        /* Egy kis extra: Mi történik, ha a felhasználó belekattint a mezőbe? */
+input:focus {
+    border-color: #2b6cb0;       /* Kattintáskor a keret kékre vált (mint a gombod) */
+    outline: none;               /* Eltünteti a böngésző alapértelmezett csúnya keretét */
+    border-width: 2px; /* Megvastagított keret*/
+    box-shadow: 0 0 8px rgba(43,108,176,0.4); /* Finom, áttetsző kék árnyék a mező körül, amitől "világítani fog"*/
+    /* az első két szám: árnyék eltolása vízszintesen és függőlegesen.
+     Mivel nulla, az árnyék egyenletesen körbe fogja venni a mezőt.
+      Harmadik szám: 8px - az árnyék elmosódottsága. Minél nagyobb, annál lágyabb a ragyogás.
+       rgba(43,108,176,0.4) - ez a kék szín kódja, a 0.4 pedig azt jelenti, hogy 40%-os az átlátszósága. */
+    transition: all 0.2s ease;
+}
+
+/* Ez pedig a :hover állapot, amikor az egér felette van */
+#belépés-gomb:hover {
+background-color: #1a365d; /* Sötétebb kék lesz, ha rámutatsz*/
+}
+
+#redirect {
+background-color: green;
+border-radius : 5px;
+color: white;
+padding : 10px 20px /* Mennyi pixel távolság legyen a szöveg szélétől, illetve tetejétőla gomb széléig */
+}

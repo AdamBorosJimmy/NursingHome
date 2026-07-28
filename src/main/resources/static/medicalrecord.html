@@ -1,0 +1,123 @@
+﻿<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <title>Orvosi Karton Mentése</title>
+    <link rel="stylesheet" href="medicalrecord.css">
+</head>
+<body>
+
+<a href="index.html" class="back-link">⬅ Back to main page</a>
+
+<div class="form-container">
+    <h2>Orvosi Karton Létrehozása</h2>
+
+    <div class="form-group">
+        <label for="residentSelect">Válasszon lakót:</label>
+        <!-- A szám alapú ID bevitelt lecseréltük erre a legördülő listára -->
+        <select id="residentSelect" required>
+            <option value="">Lakók betöltése...</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="bloodType">Vércsoport:</label>
+        <select id="bloodType">
+            <option value="A+">A+</option>
+            <option value="A-">A-</option>
+            <option value="B+">B+</option>
+            <option value="B-">B-</option>
+            <option value="0+">0+</option>
+            <option value="0-">0-</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="chronicIllnesses">Krónikus betegségek:</label>
+        <input type="text" id="chronicIllnesses" placeholder="Pl. Cukorbetegség, Magas vérnyomás" required>
+    </div>
+
+    <button onclick="sendData()" class="submit-btn">Mentés az Adatbázisba</button>
+
+    <div id="responseMessage"></div>
+</div>
+
+<script>
+        // Ez a függvény fut le AZONNAL, amikor megnyitod az oldalt a böngészőben
+        document.addEventListener("DOMContentLoaded", loadResidents);
+
+        async function loadResidents() {
+            const selectElement = document.getElementById('residentSelect');
+            try {
+                // Lekérjük a lakókat a backendtől
+                const response = await fetch('http://localhost:8080/api/residents/all');
+                if (!response.ok) throw new Error("Nem sikerült betölteni a lakókat.");
+
+                const residents = await response.json();
+
+                // Kiürítjük a "Lakók betöltése..." szöveget
+                selectElement.innerHTML = '<option value="">-- Válasszon egy lakót --</option>';
+
+                // Végigmegyünk a lakókon, és mindegyikből csinálunk egy listaelemet
+                residents.forEach(resident => {
+                    const option = document.createElement('option');
+                    // A háttérben az ID-t fogja tárolni (pl. "5")
+                    option.value = resident.id;
+                    // A felhasználó viszont a Nevet és a Szobaszámot látja (pl. "Kovács János (102. szoba)")
+                    option.text = `${resident.lastName} ${resident.firstName} (${resident.roomNumber}. szoba)`;
+                    selectElement.appendChild(option);
+                });
+
+            } catch (error) {
+                selectElement.innerHTML = '<option value="">Hiba a lakók betöltésekor!</option>';
+                console.error(error);
+            }
+        }
+
+        async function sendData() {
+            // Most már a legördülő listából nyerjük ki a kiválasztott lakó ID-ját
+            const residentId = document.getElementById('residentSelect').value;
+            const bloodType = document.getElementById('bloodType').value;
+            const chronicIllnesses = document.getElementById('chronicIllnesses').value;
+            const msgDiv = document.getElementById('responseMessage');
+
+            if (!residentId) {
+                msgDiv.style.display = "block";
+                msgDiv.style.backgroundColor = "#f8d7da";
+                msgDiv.style.color = "#721c24";
+                msgDiv.innerHTML = "Kérjük, válasszon ki egy lakót a listából!";
+                return;
+            }
+
+            const data = {
+                bloodType: bloodType,
+                chronicIllnesses: chronicIllnesses
+            };
+
+            try {
+                const response = await fetch(`http://localhost:8080/residents/${residentId}/medical-record`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    msgDiv.style.display = "block";
+                    msgDiv.style.backgroundColor = "#d4edda";
+                    msgDiv.style.color = "#155724";
+                    msgDiv.innerHTML = "Sikeres mentés! A lakó frissült az adatbázisban.";
+                    console.log("Backend válasz:", result);
+                } else {
+                    throw new Error("Hiba történt a mentés során.");
+                }
+            } catch (error) {
+                msgDiv.style.display = "block";
+                msgDiv.style.backgroundColor = "#f8d7da";
+                msgDiv.style.color = "#721c24";
+                msgDiv.innerHTML = error.message;
+            }
+        }
+    </script>
+</body>
+</html>

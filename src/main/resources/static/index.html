@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        if(/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
+         window.location.href = "mobile.html";
+         }
+    </script>
+    <meta charset="UTF-8">
+    <title>Resident profile View</title>
+    <style>
+        /* Styles preserved inside comment format */
+    </style>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px;">
+
+<div class="profile-container"
+     style="display: flex; max-width: 600px; margin: 20px auto; border: 1px solid #ccc; padding: 20px; border-radius: 8px; background-color: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+
+    <!-- Left Column: User Data -->
+    <div class="left-side" style="flex: 1; padding-right: 20px;">
+        <h2>Resident Profile</h2>
+        <p><strong>First Name:</strong> <span id="firstName">Loading...</span></p>
+        <p><strong>Middle Name:</strong> <span id="middleName">Loading...</span></p>
+        <p><strong>Last Name:</strong> <span id="lastName">Loading...</span></p>
+        <p><strong>Date of Birth:</strong> <span id="dateOfBirth">Loading...</span></p>
+        <p><strong>Room Number:</strong> <span id="roomNumber">Loading...</span></p>
+        <p><strong>National Insurance Number:</strong> <span id="niNumber">Loading...</span></p>
+    </div>
+
+    <!-- Right Column: Profile Picture Layout -->
+    <div class="right-side" style="flex: 1; display: flex; justify-content: center; align-items: center;">
+        <!-- The profile photo display element -->
+        <img id="base64Image" src="data:image/jpeg;base64,/9j/4AAQSkZJRg..." alt="Profile Picture"
+             style="max-width: 100%; height: auto; border-radius: 4px; border: 1px solid #ddd;">
+
+        <!-- Native hidden browser file selection listener tool -->
+        <input type="file" id="fileInput" accept="image/*" style="display: none;">
+    </div>
+</div>
+
+<div class="search-container" style="max-width: 600px; margin: 20px auto; display: flex; gap: 10px;">
+    <select id="searchType" style="padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+        <option value="room">Room number</option>
+        <option value="lastName">Last name</option>
+        <option value="middleName">Middle name</option>
+    </select>
+    <input type="text" id="searchQuery" placeholder="Enter the room number or name..."
+           style="flex: 1; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+    <button type="button" id="searchBtn" style="padding: 8px 16px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+        Search
+    </button>
+</div>
+
+<!-- Navigation Action Buttons Panel Stacked Legibly -->
+<div style="max-width: 600px; margin: 20px auto; display: flex; flex-direction: column; align-items: flex-end; gap: 10px;">
+    <a href="register.html" style="text-decoration: none; padding: 10px 20px; background-color: #28a745; color: white; border-radius: 4px; font-weight: bold; display: inline-block; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        + Register New Resident
+    </a>
+
+    <button type="button" id="mainUpdatePhotoBtn" style="padding: 10px 20px; background-color: #17a2b8; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        🔄 Update Profile Picture
+    </button>
+    <a href="medicalrecord.html">⬅ Go to Medical Record</a>
+</div>
+
+<script>
+    // Context variable to remember which resident room profile is active on-screen
+    let currentActiveRoom = null;
+
+    // 1. Search Click Listener
+    document.getElementById('searchBtn').addEventListener('click', (e) => {
+        const type = document.getElementById('searchType').value;
+        const query = document.getElementById('searchQuery').value.trim().toLowerCase();
+
+        if (!query) {
+            alert("Please type a room number or last name or middle name first.");
+            return;
+        }
+
+        let url = '';
+        if (type === 'room') {
+            url = `http://localhost:8080/api/residents/room/${query}`;
+        } else if(type === 'middleName'){
+            url = `http://localhost:8080/api/residents/middleName/${query}`;
+        } else if(type === 'lastName') {
+        url = `http://localhost:8080/api/residents/lastName/${query}`;
+        }
+        console.log("Requesting URL:", url);
+
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Target profile not found");
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("Successfully retrieved data:", data);
+
+                // Save active room location value globally
+                currentActiveRoom = data.roomNumber;
+
+                document.getElementById('firstName').innerText = data.firstName || 'N/A';
+                document.getElementById('middleName').innerText = data.middleName || 'N/A';
+                document.getElementById('lastName').innerText = data.lastName || 'N/A';
+                document.getElementById('dateOfBirth').innerText = data.dateOfBirth || 'N/A';
+                document.getElementById('roomNumber').innerText = data.roomNumber || 'N/A';
+                document.getElementById('niNumber').innerText = data.nationalInsuranceNumber || 'N/A';
+
+                const photoBytes = data.profilePicture || data.profile_picture || data.base64Image || data.base64_image;
+
+    if (photoBytes && photoBytes.length > 0) {
+
+        if (photoBytes.startsWith('data:image')) {
+            document.getElementById('base64Image').src = photoBytes;
+        } else {
+            document.getElementById('base64Image').src = "data:image/jpeg;base64," + photoBytes;
+        }
+        document.getElementById('base64Image').style.display = 'block';
+    } else {
+        document.getElementById('base64Image').src = '';
+        document.getElementById('base64Image').style.display = 'none';
+        document.getElementById('base64Image').alt = "No photo loaded for this resident profile";
+    }
+})
+            .catch(error => {
+                console.error('Fetch operation error:', error);
+                alert("Search failed. No resident matched that criteria.");
+                resetUI();
+            });
+    });
+
+    // 2. Interface Reset Fallback Routine
+    function resetUI() {
+        currentActiveRoom = null;
+        document.getElementById('firstName').innerText = "Not Found";
+        document.getElementById('middleName').innerText = "-";
+        document.getElementById('lastName').innerText = "-";
+        document.getElementById('dateOfBirth').innerText = "-";
+        document.getElementById('roomNumber').innerText = "-";
+        document.getElementById('base64Image').src = "";
+        document.getElementById('base64Image').alt = "Profile Picture";
+    }
+
+    // 3. New Action Button - Redirects click to hidden file element input natively
+    document.getElementById('mainUpdatePhotoBtn').addEventListener('click', () => {
+        if (!currentActiveRoom) {
+            alert("Please search and load a resident profile first before selecting a photo.");
+            return;
+        }
+        // Simulates picking a file via system prompt natively
+        document.getElementById('fileInput').click();
+    });
+
+    // 4. Handles immediate upload when a photo is selected
+    document.getElementById('fileInput').addEventListener('change', (e) => {
+        const files = e.target.files;
+        if (!files || files.length === 0 || !currentActiveRoom) return;
+
+        const formData = new FormData();
+        // Extract exact binary data reference file from index 0
+        formData.append('profilePicture', files[0]);
+
+        console.log(`Transmitting picture update payload to room path: ${currentActiveRoom}`);
+
+        fetch(`http://localhost:8080/api/residents/room/${currentActiveRoom}/photo`, {
+            method: 'PUT',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Failed to save and upload profile photo to room path mapping.");
+            }
+            return response.json();
+        })
+        .then(updatedResident => {
+            alert("Profile picture updated successfully!");
+            document.getElementById('fileInput').value = ''; // Flush input memory state
+            document.getElementById('searchBtn').click();    // Auto-refresh data content views
+        })
+        .catch(error => {
+            console.error("Upload process crash error:", error);
+            alert("Error saving image file asset data payload: " + error.message);
+        });
+    });
+</script>
+</body>
+</html>

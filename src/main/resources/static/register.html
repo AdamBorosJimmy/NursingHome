@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register New Resident</title>
+    <link rel="stylesheet" href="register.css">
+</head>
+<body>
+
+<!-- Back Button to Return Home -->
+<div class = "back-to-main-page">
+    <a href="index.html" id="back-to-profile-viewer">
+        ← Back to Profile Viewer
+    </a>
+</div>
+
+<!-- Unified Registration Form -->
+<div class="registration-container">
+    <h2>Register New Resident with Photo</h2>
+    <form id="newResidentWithPhotoForm">
+        <input type="text" id="regFirstName" placeholder="First Name">
+        <input type="text" id="regMiddleName" placeholder="Middle Name">
+        <input type="text" id="regLastName" placeholder="Last Name">
+        <input type="date" id="regDob">
+        <input type="number" id="regRoomNumber" placeholder="Room Number" >
+        <input type="text" id="regNiNumber", placeholder="National Insurance Number">
+
+        <div>
+            <label id="uploadPicture">Upload Profile
+                Picture:</label>
+            <input type="file" id="regPhoto" accept="image/*" style="padding: 5px; width: 100%;">
+        </div>
+
+        <button type="submit", id="save-resident">
+            Save Resident & Upload Photo
+        </button>
+        <div id="errorMessage", style="display: none; color: #721c24; background-color: #f8d7da;
+         border: 1px solid #f5c6cb; padding: 10px; margin-bottom: 15px; border-radius: 4px;">
+        </div>
+    </form>
+</div>
+
+<script>
+    document.getElementById('newResidentWithPhotoForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const errorDiv = document.getElementById('errorMessage');
+        errorDiv.style.display = 'none';
+        errorDiv.innerText = '';
+
+        const formData = new FormData();
+
+        formData.append('firstName', document.getElementById('regFirstName').value.trim());
+        formData.append('middleName', document.getElementById('regMiddleName').value.trim());
+        formData.append('lastName', document.getElementById('regLastName').value.trim());
+        formData.append('dateOfBirth', document.getElementById('regDob').value);
+        formData.append('roomNumber', parseInt(document.getElementById('regRoomNumber').value));
+        formData.append('nationalInsuranceNumber', document.getElementById('regNiNumber').value);
+
+
+        const fileInput = document.getElementById('regPhoto');
+        if (fileInput.files.length > 0) {
+            formData.append('profilePicture', fileInput.files[0]);
+        }
+
+        console.log("Submitting unified resident data package...");
+
+        fetch('http://localhost:8080/api/residents/with-photo', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+            return response.text().then(errText => {
+                throw new Error(errText);
+            });
+            }
+            return response.json();
+        })
+        .then(savedData => {
+            alert(`Success! Saved ${savedData.firstName} ${savedData.lastName} with photo.`);
+            document.getElementById('newResidentWithPhotoForm').reset();
+        })
+        .catch(error => {
+            console.error('Registration processing failure:', error);
+           errorDiv.innerText = error.message;
+           errorDiv.style.display = 'block';
+           errorDiv.scrollIntoView({behavior: 'smooth'});
+        });
+    });
+
+
+</script>
+</body>
+</html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caregiver Mobile Client</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        /* Simulated Smartphone Frame */
+        .phone-frame {
+            width: 360px;
+            height: 740px;
+            background-color: #f4f6f9;
+            border: 12px solid #000;
+            border-radius: 36px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+        .phone-header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px 15px 15px 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .phone-content {
+            padding: 15px;
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        select, input, button {
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 15px;
+            outline: none;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button:active {
+            background-color: #0056b3;
+        }
+        /* Mobile Profile Display card */
+        .profile-card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            text-align: center;
+        }
+        .profile-pic {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #007bff;
+            background-color: #e9ecef;
+        }
+        .info-row {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #eee;
+            padding: 8px 0;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="phone-frame">
+    <div class="phone-header">Caregiver Mobile Link</div>
+
+    <div class="phone-content">
+        <!-- Search Controls Component -->
+        <div class="input-group">
+            <select id="searchType">
+                <option value="room">Room Number</option>
+                <option value="name">Last Name</option>
+            </select>
+            <input type="text" id="searchQuery" placeholder="Search criteria...">
+            <button type="button" id="searchBtn">Find Resident</button>
+        </div>
+
+        <!-- Dynamic Output Profile View Card -->
+        <div class="profile-card">
+            <!-- FIXED: Added a small inline tracking style to make sure visibility forces update -->
+            <img id="mobileImage" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="👤" class="profile-pic" style="display: block;">
+            <h3 id="mobileName" style="margin:0; color:#333;">No Resident Loaded</h3>
+
+            <div class="info-row">
+                <strong>Room Number</strong>
+                <span id="mobileRoom">-</span>
+            </div>
+            <div class="info-row">
+                <strong>Date of Birth</strong>
+                <span id="mobileDob">-</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('searchBtn').addEventListener('click', () => {
+        const type = document.getElementById('searchType').value;
+        const query = document.getElementById('searchQuery').value.trim().toLowerCase();
+
+        if (!query) {
+            alert("Please input a search query first.");
+            return;
+        }
+
+        // Using safe relative paths matching your working backend server routes
+        let url = '';
+        if (type === 'room') {
+            url = `/api/residents/room/${query}`;
+        } else {
+            url = `/api/residents/name/${query}`;
+        }
+
+        console.log("Mobile requesting layout URL:", url);
+
+        fetch(url)
+            .then(response => {
+                if (!response.ok) throw new Error("Not Found");
+                return response.json();
+            })
+            .then(data => {
+                console.log("Mobile successfully retrieved raw object properties:", data);
+
+                document.getElementById('mobileName').innerText = `${data.firstName} ${data.middleName} ${data.lastName}`;
+                document.getElementById('mobileRoom').innerText = data.roomNumber || 'N/A';
+                document.getElementById('mobileDob').innerText = data.dateOfBirth || 'N/A';
+
+                // Extract whichever naming standard your custom Jackson DTO provides
+                const photoBytes = data.profilePicture || data.base64Image;
+
+                if (photoBytes && photoBytes.length > 0) {
+                    // Check if Jackson already prefixed it, otherwise add standard container text
+                    if (String(photoBytes).startsWith('data:image')) {
+                        document.getElementById('mobileImage').src = photoBytes;
+                    } else {
+                        document.getElementById('mobileImage').src = "data:image/jpeg;base64," + photoBytes;
+                    }
+                } else {
+                    // Fallback to a transparent box grid if no image data bytes travel up
+                    document.getElementById('mobileImage').src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+                }
+            })
+            .catch(error => {
+                console.error("Mobile error:", error);
+                alert("No resident matched that criteria.");
+                document.getElementById('mobileName').innerText = "Not Found";
+                document.getElementById('mobileRoom').innerText = "-";
+                document.getElementById('mobileDob').innerText = "-";
+                document.getElementById('mobileImage').src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+            });
+    });
+</script>
+
+</body>
+</html>
