@@ -16,6 +16,7 @@ public class MedicalRecord {
     private long id;
     private String bloodType;
     private String chronicIllnesses;
+    private String allergies;
     @OneToOne
     @JoinColumn(name = "resident_id", referencedColumnName = "id", nullable = false)
     @JsonIgnore // 👈 Pontosan ide, közvetlenül a változó fölé!
